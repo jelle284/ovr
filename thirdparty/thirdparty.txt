@@ -1,0 +1,3 @@
+openvr
+PS3EYEDriver
+zadig-2.5.exe

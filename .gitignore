@@ -1,0 +1,6 @@
+/bin
+/build
+/debug
+/driver/bin
+thirdparty/*
+!thirdparty/thirdparty.txt

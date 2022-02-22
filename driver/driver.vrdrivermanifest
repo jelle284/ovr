@@ -1,0 +1,11 @@
+{
+	"alwaysActivate": false,
+	"name" : "ovr",
+	"directory" : "",
+	"resourceOnly" : false,
+
+	"hmd_presence" :
+	[
+		"*.*"
+	]
+}

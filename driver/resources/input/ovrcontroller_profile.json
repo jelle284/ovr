@@ -1,0 +1,44 @@
+{
+	"jsonid": "input_profile",
+	"controller_type": "ovrcontroller",
+	"legacy_binding": "config/legacy_bindings_generic.json",
+	"legacy_profile" : "none",
+	"device_class" : "TrackedDeviceClass_Controller",
+	"driver_name" : "ovr",
+	"input_bindingui_mode": "single_device",
+	"input_bindingui_right": {
+		"image": "{ovr}/icons/ovrcontroller.svg"
+	},
+	"input_source": {
+		"/input/application_menu": {
+			"binding_image_point": [ 26, 42 ],
+			"type": "button",
+			"order": 1
+		},
+		"/input/system": {
+			"binding_image_point": [ 18, 37 ],
+			"type": "button",
+			"order": 2
+		},
+		"/input/grip": {
+			"binding_image_point": [ 27, 37 ],
+			"type": "button",
+			"order": 3
+		},
+		"/input/thumbstick" : {
+		  "type" : "joystick",
+		  "click" : true,
+		  "touch" : false,
+		  "binding_image_point" : [ 31, 26 ],
+		  "order" : 4
+		},
+		"/input/trigger" : {
+		  "type" : "trigger",
+		  "click" : false,
+		  "touch" : false,
+		  "value" : true,
+		  "binding_image_point" : [ 11, 60 ],
+		  "order" : 5
+		}
+	}
+}
