@@ -3,7 +3,7 @@ import time
 import struct
 import math
 import socket
-
+import threading
 ###############################################################################
 REG_JOY     = 10
 REG_LED     = 22
@@ -13,12 +13,61 @@ REG_SSID    = 48
 REG_PASS    = 56
 REG_SIZE    = 64
 
-sock_addr = '192.168.87.165'
+sock_addr = '192.168.0.165'
 sock_port = 4210
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 s.settimeout(1.0)
 
+def stream():
+    req = [4, 0, 0, 0]
+    s.sendto(bytearray(req), (sock_addr, sock_port))
+    # t = threading.Thread(target=stream_recive)
+    # t.start()
+    acc = [sg.Text('', key=f"__text{i}__", size=(8,1)) for i in range(3)]
+    gyro = [sg.Text('', key=f"__text{i}__", size=(8,1)) for i in range(3,6)]
+    mag = [sg.Text('', key=f"__text{i}__", size=(8,1)) for i in range(6,9)]
+    adc = [sg.Text('', key=f"__text{i}__", size=(8,1)) for i in range(9,13)]
+    layout = [acc, gyro, mag, adc, [sg.Quit()]]
+    window = sg.Window("streaming", layout=layout)
+    tlast = time.time()
+    exceptOut = None
+    while 1:
+        event, values = window.Read(timeout=0.01)
+        try:
+            res, addr = s.recvfrom(256)
+            type_code = res[0]
+            if type_code == 49:
+                for i in range(0, 6):
+                    text = base_gui.readblock_float(res[1:], i)
+                    window[f"__text{i}__"].update(value=text)
+            elif type_code == 50:
+                for i in range(0, 3):
+                    text = base_gui.readblock_float(res[1:], i)
+                    window[f"__text{i+6}__"].update(value=text)
+            elif type_code == 51:
+                text = struct.unpack('4h', res[1:])
+                for i in range(0,4):
+                    window[f"__text{i+9}__"].update(value=text[i])
+            elapsed = time.time() - tlast;
+            tlast = time.time()
+        except socket.timeout:
+            pass
+        except Exception as e: 
+            exceptOut = str(e)
+            break
+        if event in ('Quit', None):
+            break
+    window.close()
+    s.sendto(bytearray(req), (sock_addr, sock_port))
+    while 1:
+        try:
+            res, addr = s.recvfrom(128)
+            time.sleep(0.010)
+        except socket.timeout:
+            break
+    if exceptOut: sg.popup(exceptOut)
+    
 def update():
     req = [1, 0, REG_SIZE, 0]
     data=['']*REG_SIZE
@@ -76,13 +125,7 @@ import PySimpleGUI as sg
 def search():
     id_req = [1, REG_NAME, 8, 0]
     s.sendto(bytearray(id_req), ('<broadcast>', 4210))
-    retval = []
-    while 1:
-        try:
-            data, addr = s.recvfrom(1024)
-            retval.append((data, addr))
-        except socket.timeout:
-            return retval
+    return [s.recvfrom(4*8)]
         
 def find_and_select():
     global sock_addr
@@ -107,8 +150,8 @@ def find_and_select():
         if event in controllers.keys():
             sock_addr = controllers[event]
             print("controller IP is:", sock_addr)
-    finally:
         window.close()
+    finally:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 0)
 
 def zero_imu():
@@ -229,7 +272,8 @@ if __name__ == '__main__':
                                find=find_and_select,
                                adc=zero_adc,
                                WiFi=setup_wifi,
-                               Wipe=wipe_device)
+                               Wipe=wipe_device,
+                               stream=stream)
         gui.col_len=32
         gui.main()
     finally:

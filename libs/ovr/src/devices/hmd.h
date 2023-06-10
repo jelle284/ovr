@@ -7,14 +7,15 @@ class HeadMountDisplay :
 	public TrackerBase
 {
 private:
-	void threadFunc();
 	std::thread* pThread;
+	void threadFunc();
 public:
 	HeadMountDisplay();
 	~HeadMountDisplay();
-	
-	void start() override;
-	void stop() override;
+
+	/* ovr interface */
+	virtual void start() override;
+	virtual void stop() override;
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include "ui_elements.h"
 
+using namespace ui;
 
 /************** UI ELEMENTS ****************/
 static const unsigned int barhandle_width = 8;
@@ -20,7 +21,8 @@ static int vtop(int v, cv::Rect area, int max_value, int min_value) {
 // STATIC TEXT
 static_text::static_text(int x, int y, int width, int height) :
 	area(x, y, width, height),
-	margin(0.1 * width)
+	margin(0.1 * width),
+	fontScale(0.4)
 {
 }
 
@@ -28,28 +30,32 @@ void static_text::draw(cv::Mat& im)
 {
 	using namespace cv;
 	const auto fontFace = FONT_HERSHEY_SIMPLEX;
-	const double fontScale = 0.4;
 	const int thickness = 1;
 	const Scalar color(0, 0, 0);
 
-	// center the text in the label
-	int baseline = 0;
-	Size textSize = getTextSize(text, fontFace,
-		fontScale, thickness, &baseline);
-	baseline += thickness;
-
-	Point textOrg( area.x + (area.width - textSize.width) / 2,
-		area.y + (area.height + textSize.height) / 2);
-
-	
 	// draw area
 	rectangle(im, area, shade_light, -1);
 
-	// draw text
-	putText(im, text, textOrg, fontFace, fontScale,
-		color, thickness, 8);
-
-
+	// iterate over lines
+	auto lines = std::vector<std::string>{};
+	auto ss = std::stringstream{ text };
+	for (std::string line; std::getline(ss, line, '\n');)
+		lines.push_back(line);
+	int line_count = 0;
+	for (auto line : lines) {
+		// center the text in the label
+		int baseline = 0;
+		Size textSize = getTextSize(line, fontFace,
+			fontScale, thickness, &baseline);
+		baseline += thickness;
+		int line_space = 10;
+		Point textOrg(area.x + (area.width - textSize.width) / 2,
+			area.y + line_space + line_count*(textSize.height + line_space) + (textSize.height) / 2);
+		// draw text
+		putText(im, line, textOrg, fontFace, fontScale,
+			color, thickness, 8);
+		line_count++;
+	}
 }
 
 // DOUBLE ENDED SLIDER
@@ -352,6 +358,9 @@ graph_timeseries::graph_timeseries(int x, int y, int width, int height, unsigned
 void graph_timeseries::draw(cv::Mat& im)
 {
 	using namespace cv;
+	// define colors
+	const Scalar colors[] = { Scalar(0,0,255), Scalar(0,255,0), Scalar(255,0,0) };
+	// clear area
 	rectangle(im, area, Scalar(120, 120, 120), 5);
 	rectangle(im, area, Scalar(40, 40, 40), -1);
 	// loop colors
@@ -370,10 +379,13 @@ void graph_timeseries::draw(cv::Mat& im)
 				double prev_d = dataseries[i - 1];
 				Point2d prev_point = scaleToPoint(prev_d, i - 1);
 				// draw line from prev point to current;
-				const Scalar colors[] = { Scalar(0,0,255), Scalar(0,255,0), Scalar(255,0,0) };
+				
 				line(im, prev_point, p, colors[color]);
 			}
 		}
+		// draw legend
+		auto leg_start = cv::Point2d(area.x + color * 20, area.y + 10);
+		line(im, leg_start, leg_start + Point2d(10, 0), colors[color]);
 	}
 
 }
@@ -394,4 +406,49 @@ cv::Point2d graph_timeseries::scaleToPoint(double d, unsigned int x)
 	double yval = r.y + 0.5 * r.height - d * yscale;
 	double xval = r.x + x * xscale;
 	return cv::Point2d(xval, yval);
+}
+
+// Main window
+Window::Window(std::string name, cv::Scalar color) :
+	winname(name),
+	color(color)
+{
+	using namespace cv;
+	namedWindow(winname);
+	setMouseCallback(winname, on_mouse, &mouse);
+	canvas = Mat::zeros(800, 1280, CV_8UC3);
+}
+
+Window::~Window()
+{
+}
+
+bool Window::run()
+{
+	return run(16);
+}
+
+bool Window::run(int delay_ms) {
+	// check window status
+	if WIN_CLOSED(winname) {
+		cv::destroyWindow(winname);
+		return false;
+	}
+
+	// clear canvas
+	rectangle(canvas, cv::Rect(0, 0, canvas.cols, canvas.rows), color, -1);
+
+	// loop elements
+	bool event = false;
+	for (auto e : elements) {
+		e->mouse_handler(mouse);
+		e->draw(canvas);
+		if (e->has_changed) event = true;
+	}
+	if (!event) {
+		// show images
+		cv::imshow(winname, canvas);
+		int key = cv::waitKey(delay_ms);
+	}
+	return true;
 }

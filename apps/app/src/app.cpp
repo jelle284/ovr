@@ -7,6 +7,7 @@
 
 
 using namespace cv;
+using namespace ui;
 
 /* Globals */
 auto g_Cameras = getCameras();
@@ -44,13 +45,16 @@ void app() {
 	UITracking ui_tracking;
 	UISensors ui_sensors;
 
-	{	// load config
+	try {	// load config
 		cv::FileStorage fs("vr_calib.json", cv::FileStorage::READ);
 		for (auto c : g_Cameras) fs[c->file_id()] >> c;
 		for (auto d : g_Devices) fs[d->get_name()] >> d;
 
 		fs["Proces Noise"] >> g_ProcesNoise;
 		fs["Measurement Noise"] >> g_MeasurementNoise;
+	}
+	catch (std::exception e) {
+		std::cout << "Load failed: " << e.what();
 	}
 	
 
@@ -98,7 +102,7 @@ void app() {
 			ui_sensors.loop(canvas(content), mouse(content));
 
 		// show images
-		imshow(winname, canvas);
+		cv::imshow(winname, canvas);
 		int key = cv::waitKey(10);
 		if WIN_CLOSED(winname) running = false;
 	}

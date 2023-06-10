@@ -4,6 +4,7 @@
 #include "ovr.h"
 #include "opencv2/opencv.hpp"
 #include "ui/ui_elements.h"
+using namespace ui;
 
 class UICalibrate {
 public:

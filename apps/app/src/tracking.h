@@ -5,6 +5,7 @@
 #include "opencv2/opencv.hpp"
 #include "ui/ui_elements.h"
 #include "ui/viewer.h"
+using namespace ui;
 
 class UITracking {
 public:

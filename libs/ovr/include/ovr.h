@@ -1,11 +1,11 @@
-#ifndef OVR_CAMERA_H
-#define OVR_CAMERA_H
+#ifndef OVR_H
+#define OVR_H
 
 #include "opencv2/opencv.hpp"
 #include "quaternion.h"
 #include <vector>
 
-#define CAMERA_DLL_EXPORT __declspec(dllexport)
+#define OVR_DLL_EXPORT __declspec(dllexport)
 
 enum class EDevice {
 	Hmd = 0,
@@ -92,7 +92,7 @@ static void read(const cv::FileNode& node, ICamera* camera, const ICamera*) {
 }
 typedef std::vector<ICamera*> CameraList_t;
 
-CAMERA_DLL_EXPORT CameraList_t getCameras();
+OVR_DLL_EXPORT CameraList_t getCameras();
 
 /*
 * 
@@ -101,6 +101,14 @@ CAMERA_DLL_EXPORT CameraList_t getCameras();
 */
 struct IMUData_t {
 	cv::Matx31f accel, gyro, mag;
+};
+
+struct ADCData_t {
+	int16_t
+		jx,
+		jy,
+		trig,
+		btn;
 };
 
 struct ButtonData_t {
@@ -125,7 +133,6 @@ namespace EDataFlags {
 class IDevice {
 public:
 	uchar has_data;
-	
 
 	virtual void start() = 0;
 	virtual void stop() = 0;
@@ -135,6 +142,7 @@ public:
 
 	virtual IMUData_t get_imu_data() { return IMUData_t(); };
 	virtual ButtonData_t get_button_data() { return ButtonData_t(); };
+	virtual ADCData_t get_adc_data() { return ADCData_t(); };
 	virtual Pose_t get_pose_data() { return Pose_t(); };
 	virtual std::string get_name() = 0;
 	virtual EDevice getTag() = 0;
@@ -156,6 +164,6 @@ static void read(const cv::FileNode& node, IDevice* dev, const IDevice*) {
 	}
 }
 typedef std::array<IDevice*, 3> DeviceList_t;
-CAMERA_DLL_EXPORT DeviceList_t getDevices();
+OVR_DLL_EXPORT DeviceList_t getDevices();
 
 #endif

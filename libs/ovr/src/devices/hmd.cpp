@@ -5,12 +5,30 @@ HANDLE hSerial = nullptr;
 COMSTAT status;
 DWORD errors;
 
+void HeadMountDisplay::start()
+{
+	m_running = true;
+	pThread = new std::thread(&HeadMountDisplay::threadFunc, this);
+}
+
+void HeadMountDisplay::stop()
+{
+	if (m_running) {
+		m_running = false;
+		if (pThread) {
+			pThread->join();
+			delete pThread;
+			pThread = nullptr;
+		}
+	}
+}
+
 void HeadMountDisplay::threadFunc()
 {
 	const char imu_req[4] = { 1, 0, 9, 0 };
 	const char name_req[4] = { 1, REG_NAME, 8, 0 };
-	m_threadState = true;
-	while (m_threadState)
+	
+	while (m_running)
 	{
 		if (m_connectionStatus) { // read imu data from hmd
 			auto poll_deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(m_pollRate);
@@ -84,21 +102,5 @@ HeadMountDisplay::HeadMountDisplay() :
 
 HeadMountDisplay::~HeadMountDisplay()
 {
-
+	stop();
 }
-
-void HeadMountDisplay::start()
-{
-	pThread = new std::thread(&HeadMountDisplay::threadFunc, this);
-}
-
-void HeadMountDisplay::stop()
-{
-	m_threadState = false;
-	if (pThread) {
-		pThread->join();
-		delete pThread;
-		pThread = nullptr;
-	}
-}
-

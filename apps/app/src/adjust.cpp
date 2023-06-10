@@ -1,6 +1,5 @@
 #include "adjust.h"
 
-
 extern CameraList_t g_Cameras;
 
 inline cv::Vec2b slider_bounds(double_ended_slider& sld) {

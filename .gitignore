@@ -4,3 +4,4 @@
 /driver/bin
 thirdparty/*
 !thirdparty/thirdparty.txt
+*.pyc

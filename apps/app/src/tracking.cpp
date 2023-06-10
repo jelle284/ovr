@@ -8,7 +8,6 @@ extern double g_MeasurementNoise;
 
 const double noise_slider_scale = 10.0;
 
-
 UITracking::UITracking() :
 	image_buffer(480, 640, CV_8UC1),
 	ls(0, 0, 960, 720), rs(960, 0, 320, 720),
@@ -139,6 +138,7 @@ void UITracking::loop(cv::Mat& canvas, mouse_data_t mouse)
 		if (pDevice->has_data & EDataFlags::IMU) {
 			pDevice->update_from_ext(g_Cameras);
 		}
+		// get pose from device
 		if (pDevice->has_data & EDataFlags::Pose) {
 			auto pose = pDevice->get_pose_data();
 			// draw position

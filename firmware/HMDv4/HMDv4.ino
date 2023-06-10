@@ -140,15 +140,6 @@ const float gyro_conversion = (PI / 180.0f) * 1000.0f / 32768.0f;
 const float acc_conversion  = 2.0f * 9.81f / 32768.0f;
 const float mag_conversion  = 4912.0f / 32760.0f;
 
-// Inner axis orientation
-// Set index and sign of each axis
-uint8_t x_i = 1,
-        y_i = 0,
-        z_i = 2;
-int8_t  x_s = -1,
-        y_s = -1,
-        z_s = -1;
-
 // ======================= SETUP ======================== //
 void setup() {
   // Clear registers
@@ -224,9 +215,10 @@ void loop() {
     rawAcc[1] = ((int16_t)accBuffer[2] << 8) | accBuffer[3];
     rawAcc[2] = ((int16_t)accBuffer[4] << 8) | accBuffer[5];
     // Convert data
-    accel[0]  = x_s * rawAcc[x_i] * acc_conversion;
-    accel[1]  = y_s * rawAcc[y_i] * acc_conversion;
-    accel[2]  = z_s * rawAcc[z_i] * acc_conversion;
+    accel[0]  = -rawAcc[0] * acc_conversion;
+    accel[1]  = -rawAcc[2] * acc_conversion;
+    accel[2]  = -rawAcc[1] * acc_conversion;
+    
     // read gyroscope bytes
     uint8_t gyroBuffer[6];
     readBytes(MPU9250_ADDRESS, GYRO_XOUT_H, 6, &gyroBuffer[0]);
@@ -238,10 +230,10 @@ void loop() {
     rawGyro[1] -= gyroBias[1];
     rawGyro[2] -= gyroBias[2];
     // Convert data
-    gyro[0]    = x_s * rawGyro[x_i] * gyro_conversion;
-    gyro[1]    = y_s * rawGyro[y_i] * gyro_conversion;
-    gyro[2]    = z_s * rawGyro[z_i] * gyro_conversion;
-
+    gyro[0]    = -rawGyro[0] * gyro_conversion;
+    gyro[1]    = -rawGyro[2] * gyro_conversion;
+    gyro[2]    = -rawGyro[1] * gyro_conversion;
+    // increment counter
     ++imu_counter;
   }
 
@@ -263,9 +255,9 @@ void loop() {
       rawMag[1] -= magBias[1];
       rawMag[2] -= magBias[2];
       // Convert data
-      mag[0]   =  y_s * rawMag[y_i] * mag_conversion;
-      mag[1]   =  x_s * rawMag[x_i] * mag_conversion;
-      mag[2]   = -z_s * rawMag[z_i] * mag_conversion;
+      mag[0]   =  -rawMag[1] * mag_conversion;
+      mag[1]   =  rawMag[2] * mag_conversion;
+      mag[2]   =  -rawMag[0] * mag_conversion;
       ++mag_counter;
     }
   }

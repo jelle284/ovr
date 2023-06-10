@@ -4,7 +4,7 @@
 #include "devices/hmd.h"
 #include "devices/hand_controller.h"
 
-CAMERA_DLL_EXPORT CameraList_t getCameras()
+OVR_DLL_EXPORT CameraList_t getCameras()
 {
 	std::vector<ICamera*> v;
 	auto devices = ps3eye::PS3EYECam::getDevices();
@@ -16,8 +16,11 @@ CAMERA_DLL_EXPORT CameraList_t getCameras()
 
 HeadMountDisplay g_Hmd;
 HandController g_RHC(EDevice::RightHandController), g_LHC(EDevice::LeftHandController);
+UDPServer g_udp;
 
-CAMERA_DLL_EXPORT DeviceList_t getDevices()
+OVR_DLL_EXPORT DeviceList_t getDevices()
 {
+	g_udp.subscribe(&g_RHC);
+	g_udp.subscribe(&g_LHC);
 	return std::array<IDevice*, 3>({ &g_Hmd, &g_LHC, &g_RHC });
 }

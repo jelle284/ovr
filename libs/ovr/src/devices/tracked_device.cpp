@@ -8,7 +8,7 @@ static const uint n_max_queue_size = 20;
 TrackerBase::TrackerBase(EDevice tag) :
     m_tag(tag),
 	m_pollRate(20),
-	m_threadState(false),
+	m_running(false),
 	m_connectionStatus(false)
 {
 	m_connectionStatus = false;
@@ -20,8 +20,8 @@ TrackerBase::TrackerBase(EDevice tag) :
 
 TrackerBase::~TrackerBase()
 {
-	if (m_threadState) {
-		m_threadState = false;
+	if (m_running) {
+		m_running = false;
 	}
 	m_connectionStatus = false;
 }
@@ -35,12 +35,17 @@ void TrackerBase::imu_update(float* read_buf)
 		m_IMUData.gyro(i) = read_buf[i + REG_GYRO];
 		m_IMUData.mag(i) = read_buf[i + REG_MAG];
 	}
+	fuse_imu();
+}
+
+void TrackerBase::fuse_imu()
+{
 	// imu fusion
 	auto dq = mahonyQuaternionUpdate(m_IMUData, m_q);
-	m_q = m_q + dq.mul(m_pollRate*0.001f);
+	m_q = m_q + dq.mul(m_pollRate * 0.001f);
 	m_q = m_q.normalized();
 	// offset
-	m_Pose.q = m_qzero.conjugate()*m_q;
+	m_Pose.q = m_qzero.conjugate() * m_q;
 	// update acceleration
 	Quaternionf qacc = m_q * Quaternionf(0.0, m_IMUData.accel(0), m_IMUData.accel(1), m_IMUData.accel(2)) * m_q.conjugate();
 	cv::Matx31d acc(qacc.val[1], qacc.val[2] - 9.81, qacc.val[3]);
@@ -60,6 +65,8 @@ IMUData_t TrackerBase::get_imu_data()
 Pose_t TrackerBase::get_pose_data()
 {
 	const std::lock_guard<std::mutex> lock(m_mtx);
+	m_Pose.pos = cv::Matx31f(m_kf.get_pos());
+	m_Pose.vel = cv::Matx31f(m_kf.get_vel());
 	has_data &= ~EDataFlags::Pose;
 	return m_Pose;
 }
@@ -76,10 +83,9 @@ void TrackerBase::update_from_ext(std::vector<ICamera*> cameras)
 			step += dir/(double)cameras.size();
 		}
 	}
-	auto npos = Matx31d(m_Pose.pos) + step;
-	m_kf.correct(npos);
-	m_Pose.pos = Matx31f(m_kf.get_pos());
-	m_Pose.vel = Matx31f(m_kf.get_vel());
+	auto next_pos = m_kf.get_pos() + step;
+	m_kf.correct(next_pos);
+
 	has_data |= EDataFlags::Pose;
 	has_data &= ~EDataFlags::IMU;
 }
@@ -104,8 +110,10 @@ void TrackerBase::write(cv::FileStorage& fs) const
 		<< "Align Y" << m_qzero.val[2]
 		<< "Align Z" << m_qzero.val[3]
 		<< "Mag Ref" << m_magRef
-		<< "Acc Ref" << m_accRef
-		<< "}";
+		<< "Acc Ref" << m_accRef;
+	udef_write(fs);
+	fs << "}";
+
 }
 
 void TrackerBase::read(const cv::FileNode& node)
@@ -116,25 +124,22 @@ void TrackerBase::read(const cv::FileNode& node)
 	node["Align Z"] >> m_qzero.val[3];
 	node["Mag Ref"] >> m_magRef;
 	node["Acc Ref"] >> m_accRef;
+	udef_read(node);
 	m_q = m_qzero;
 }
 
+
+
 std::string TrackerBase::get_name() {
-	char name[24] = { '\0' };
 	switch (m_tag)
 	{
 	case EDevice::Hmd:
-		strcpy_s<24>(name, "Head Mount Display");
-		break;
+		return std::string("Head Mount Display");
 	case EDevice::LeftHandController:
-		strcpy_s<24>(name, "Left Hand Controller");
-		break;
+		return std::string("Left Hand Controller");
 	case EDevice::RightHandController:
-		strcpy_s<24>(name, "Right Hand Controller");
-		break;
+		return std::string("Right Hand Controller");
 	default:
-		strcpy_s<24>(name, "Unknown device");
-		break;
+		return std::string("Unknown device");
 	}
-	return std::string(name);
 }

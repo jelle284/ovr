@@ -1,9 +1,11 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 
+
+#include "ovr.h"
 #include "opencv2/opencv.hpp"
 #include "ui/ui_elements.h"
-#include "ovr.h"
+using namespace ui;
 
 class UISensors {
 public:

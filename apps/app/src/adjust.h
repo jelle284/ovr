@@ -3,6 +3,7 @@
 
 #include "ovr.h"
 #include "ui/ui_elements.h"
+using namespace ui;
 
 class UIAdjust {
 public:

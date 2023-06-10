@@ -58,32 +58,10 @@ add_subdirectory(apps/app)
 # DRIVER 
 add_subdirectory(libs/driver)
 
-# SANDBOX
-add_executable(sandbox 
-	apps/sandbox.cpp
-)
-	
-target_include_directories(sandbox PUBLIC
-	${OVR_INCLUDE_DIRS}
-	${OpenCV_INCLUDE_DIRS}
-)
-
-target_link_libraries(sandbox PUBLIC
-	${OVR_LIBS}
-	${OpenCV_LIBS}
-)
-
-# MONITOR TEST
-add_executable(testmonitor 
-	apps/tests/testmonitor.cpp
-)
-
 
 # set outputs for targets
 set_target_properties(
 	ovr_lib
-	sandbox
-	testmonitor
     PROPERTIES
 	ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin
 	LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin
@@ -97,9 +75,45 @@ set_target_properties(
 	ovr_app
 	PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE ${STEAM_PATH}/config/ovr
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/debug
+)
+
+
+# SANDBOX
+FILE(GLOB UI_SOURCE_FILES apps/app/src/ui/*.h apps/app/src/ui/*.cpp)
+add_executable(sandbox 
+	apps/sandbox.cpp
+	${UI_SOURCE_FILES}
+)
+
+message(UI_SOURCE_FILES="${UI_SOURCE_FILES}")
+
+target_include_directories(sandbox PUBLIC
+	apps/app/src/ui
+	${OVR_INCLUDE_DIRS}
+	${OpenCV_INCLUDE_DIRS}
+    ${LibUSB_INCLUDE_DIRS}
+)
+
+target_link_libraries(sandbox PUBLIC
+	optimized ${OVR_LIBS_RELEASE} debug ${OVR_LIBS_DEBUG}
+	${OpenCV_LIBS}
+	${LibUSB_LIBS}
+)
+
+set_target_properties(
+	ovr_app
+	PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE ${STEAM_PATH}/config/ovr
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/debug
 )
 
 if(BUILD_TESTS)
+# MONITOR TEST
+add_executable(testmonitor 
+	apps/tests/testmonitor.cpp
+)
+
 # HMD TEST
 add_executable(testhmd 
 	src/tests/testhmd.cpp

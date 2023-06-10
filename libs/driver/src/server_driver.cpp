@@ -1,6 +1,6 @@
 #include "server_driver.h"
 
-
+#define ROT_ONLY
 
 EVRInitError COvrServerDriver::Init( vr::IVRDriverContext *pDriverContext )
 {
@@ -9,26 +9,29 @@ EVRInitError COvrServerDriver::Init( vr::IVRDriverContext *pDriverContext )
 	InitDriverLog( vr::VRDriverLog() );
 
 	DeviceList = getDevices();
-	CameraList = getCameras();
-
+	
 	m_pHMD = new COvrHMDDriver();
 	vr::VRServerDriverHost()->TrackedDeviceAdded("ovr-hmd", vr::TrackedDeviceClass_HMD, m_pHMD);
-	
+
+#ifndef ROT_ONLY
 	m_pRHController = new COvrControllerDriver(TrackedControllerRole_RightHand);
 	vr::VRServerDriverHost()->TrackedDeviceAdded("ovr-rhc", vr::TrackedDeviceClass_Controller, m_pRHController);
 
 	m_pLHController = new COvrControllerDriver(TrackedControllerRole_LeftHand);
 	vr::VRServerDriverHost()->TrackedDeviceAdded("ovr-lhc", vr::TrackedDeviceClass_Controller, m_pLHController);
 
-
+	CameraList = getCameras();
 	for (auto c : CameraList) {
 		auto pBaseStation = new COvrBaseStation();
-			vr::VRServerDriverHost()->TrackedDeviceAdded(
-				c->file_id().c_str(), 
-				vr::TrackedDeviceClass_TrackingReference,
-				pBaseStation
-			);
+		vr::VRServerDriverHost()->TrackedDeviceAdded(
+			c->file_id().c_str(),
+			vr::TrackedDeviceClass_TrackingReference,
+			pBaseStation
+		);
 	}
+#endif // ROT_ONLY
+
+
 
 	// open calibration file
 	auto propHandle = pDriverContext->GetDriverHandle();
@@ -85,8 +88,10 @@ void COvrServerDriver::Cleanup()
 void COvrServerDriver::RunFrame()
 {
 		m_pHMD->RunFrame();
+#ifndef ROT_ONLY
 		m_pRHController->RunFrame();
 		m_pLHController->RunFrame();
+#endif // ROT_ONLY
 }
 
 void COvrServerDriver::threadFunc()

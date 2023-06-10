@@ -55,28 +55,29 @@
 class TrackerBase : public IDevice
 {
 private:
-	std::mutex m_mtx;
 	IMUData_t m_IMUData;
 	Pose_t m_Pose;
 	Quaternionf m_qzero, m_q;
 	cv::Matx31f m_accRef, m_magRef;
 	KalmanFilter3 m_kf;
-	
+	void fuse_imu();
 protected:
+	std::mutex m_mtx;
 	EDevice m_tag;
 	bool m_connectionStatus;
-	bool m_threadState;
+	bool m_running;
 	int m_pollRate;
 	void imu_update(float* read_buf);
-
+	virtual void udef_write(cv::FileStorage& fs) const {};
+	virtual void udef_read(const cv::FileNode& node) {};
 public:
 	TrackerBase(EDevice tag);
 	~TrackerBase();
 	
-	/* device interface */
+	/* ovr interface */
 	virtual EDevice getTag() override { return m_tag; }
 	virtual bool isConnected() override { return m_connectionStatus; }
-	virtual bool isRunning() override { return m_threadState; }
+	virtual bool isRunning() override { return m_running; }
 	virtual void setPollRate(int ms) override { m_pollRate = ms; }
 	virtual std::string get_name() override;
 
