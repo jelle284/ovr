@@ -2,7 +2,6 @@
 #define HANDCONTROLLER_H
 
 #include "tracked_device.h"
-#include <condition_variable>
 
 class HandController : public TrackerBase {
 public:
@@ -15,14 +14,14 @@ public:
 	bool is_id(int check_id) { return chip_id == check_id; }
 	void assign_chip(int assigned_id) { chip_id = assigned_id; }
 	
-	// led parameters
-	char led_R, led_G, led_B, led_tmr;
+
 
 	/* ovr interface */
 	virtual void start() override;
 	virtual void stop() override;
 	virtual ADCData_t get_adc_data() override;
 	virtual ButtonData_t get_button_data() override;
+	virtual void teachButton(EButton button, int16_t value, int16_t thresh) override;
 
 private:
 	int chip_id;
@@ -50,17 +49,6 @@ private:
 	virtual void udef_read(const cv::FileNode& node) override;
 
 
-};
-
-class UDPServer {
-	std::vector<HandController*> m_subscribers;
-	bool running;
-	std::thread* pThread;
-	void ThreadFunc();
-public:
-	UDPServer();
-	~UDPServer();
-	void subscribe(HandController* pCl);
 };
 
 #endif

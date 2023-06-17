@@ -62,15 +62,20 @@ private:
 	KalmanFilter3 m_kf;
 	void fuse_imu();
 protected:
+	// device states
 	std::mutex m_mtx;
 	EDevice m_tag;
 	bool m_connectionStatus;
 	bool m_running;
 	int m_pollRate;
+	// functions
 	void imu_update(float* read_buf);
 	virtual void udef_write(cv::FileStorage& fs) const {};
 	virtual void udef_read(const cv::FileNode& node) {};
 public:
+	// led parameters
+	unsigned char led_R, led_G, led_B, led_tmr;
+
 	TrackerBase(EDevice tag);
 	~TrackerBase();
 	

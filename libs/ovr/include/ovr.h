@@ -130,20 +130,33 @@ namespace EDataFlags {
 	};
 }
 
+enum class EButton {
+	Btn1,
+	Btn2,
+	Btn3,
+	Btn4,
+	JxMid,
+	JxMin,
+	JxMax,
+	JyMid,
+	JyMin,
+	JyMax,
+	Tmin,
+	Tmax
+};
+
 class IDevice {
 public:
 	uchar has_data;
-
-	virtual void start() = 0;
-	virtual void stop() = 0;
-
-	virtual void update_from_ext(std::vector<ICamera*> cameras) = 0;
-	virtual void update_from_int(const cv::Point3d& head) = 0;
-
 	virtual IMUData_t get_imu_data() { return IMUData_t(); };
 	virtual ButtonData_t get_button_data() { return ButtonData_t(); };
 	virtual ADCData_t get_adc_data() { return ADCData_t(); };
 	virtual Pose_t get_pose_data() { return Pose_t(); };
+	virtual void teachButton(EButton button, int16_t value, int16_t thresh) {};
+	virtual void start() = 0;
+	virtual void stop() = 0;
+	virtual void update_from_ext(std::vector<ICamera*> cameras) = 0;
+	virtual void update_from_int(const cv::Point3d& head) = 0;
 	virtual std::string get_name() = 0;
 	virtual EDevice getTag() = 0;
 	virtual bool isConnected() = 0;

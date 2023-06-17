@@ -144,11 +144,12 @@ namespace ui {
 	// Graph element
 	class graph_timeseries : public ui_element{
 	public:
-		graph_timeseries(int x, int y, int width, int height, unsigned int n_max_points);
+		graph_timeseries(int x, int y, int width, int height, unsigned int n_max_points, std::string title);
 		void mouse_handler(mouse_data_t mouse) override {}
 		void draw(cv::Mat& im) override;
 		void add(double p, int color=0);
 	private:
+		std::string title;
 		cv::Rect area;
 		std::deque<double> graph_data[3];
 		unsigned int n_max_points, margin;

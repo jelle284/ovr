@@ -3,12 +3,11 @@
 #include "madgwick.h"
 #include "camera_math.h"
 
-static const uint n_max_queue_size = 20;
-
 TrackerBase::TrackerBase(EDevice tag) :
     m_tag(tag),
-	m_pollRate(20),
+	m_pollRate(10),
 	m_running(false),
+	led_R(255), led_G(255), led_B(255), led_tmr(1),
 	m_connectionStatus(false)
 {
 	m_connectionStatus = false;
@@ -97,6 +96,7 @@ void TrackerBase::update_from_int(const cv::Point3d& head)
 
 void TrackerBase::align()
 {
+	const std::lock_guard<std::mutex> lock(m_mtx);
 	m_qzero = m_q;
 	m_accRef = m_IMUData.accel;
 	m_magRef = m_IMUData.mag;
@@ -105,6 +105,10 @@ void TrackerBase::align()
 void TrackerBase::write(cv::FileStorage& fs) const
 {
 	fs << "{"
+		<< "LED Red" << led_R
+		<< "LED Green" << led_G
+		<< "LED Blue" << led_B
+		<< "LED Timer" << led_tmr
 		<< "Align W" << m_qzero.val[0]
 		<< "Align X" << m_qzero.val[1]
 		<< "Align Y" << m_qzero.val[2]
@@ -118,6 +122,10 @@ void TrackerBase::write(cv::FileStorage& fs) const
 
 void TrackerBase::read(const cv::FileNode& node)
 {
+	node["LED Red"] >> led_R;
+	node["LED Green"] >> led_G;
+	node["LED Blue"] >> led_B;
+	node["LED Timer"] >> led_tmr;
 	node["Align W"] >> m_qzero.val[0];
 	node["Align X"] >> m_qzero.val[1];
 	node["Align Y"] >> m_qzero.val[2];

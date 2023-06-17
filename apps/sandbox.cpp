@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) {
 	
 	ui::static_text 
 		st(50, 50, 200, 50),
-		rgyro(50, 150, 200, 400),
-		lgyro(300, 150, 200, 400);
+		rgyro(50, 150, 200, 600),
+		lgyro(300, 150, 200, 600);
 
 	st.text = "Hello";
 	st.fontScale = 1.0;
@@ -62,6 +62,8 @@ int main(int argc, char* argv[]) {
 				auto btn_data = d->get_button_data();
 				std::stringstream ss;
 				ss << "gyro data\n" << imu_data.gyro << "\n";
+				ss << "accel data\n" << imu_data.accel << "\n";
+				ss << "mag data\n" << imu_data.mag << "\n";
 				ss << "quaternion\n" << pose_data.q(0) << "\n" << pose_data.q(1) << "\n" << pose_data.q(2) << "\n" << pose_data.q(3) << "\n";
 				ss << "adc\n" 
 					<< adc_data.jx << "\n"

@@ -348,10 +348,11 @@ void radio_buttons::disable_all_but(toggle_button* pbtn)
 }
 
 // GRAPH TIMESERIES
-graph_timeseries::graph_timeseries(int x, int y, int width, int height, unsigned int n_max_points) :
+graph_timeseries::graph_timeseries(int x, int y, int width, int height, unsigned int n_max_points, std::string title) :
 	n_max_points(n_max_points),
 	ymin(0), ymax(1), margin(5),
-	area(x, y, width, height)
+	area(x, y, width, height),
+	title(title)
 {
 }
 
@@ -386,6 +387,30 @@ void graph_timeseries::draw(cv::Mat& im)
 		// draw legend
 		auto leg_start = cv::Point2d(area.x + color * 20, area.y + 10);
 		line(im, leg_start, leg_start + Point2d(10, 0), colors[color]);
+	}
+	// draw title
+	const Scalar white(255, 255, 255);
+	putText(im, title,
+		Point(area.x + 0.2 * area.width, area.y + 0.1 * area.height),
+		FONT_HERSHEY_SIMPLEX, text_large, white);
+
+	// draw axis
+	const std::array<double, 7> axis_markers = { 0.75, 0.5, 0.25, 0.0, -0.25, -0.5, -0.75 };
+	for (auto marker : axis_markers) {
+
+		const auto marker_value = marker * (ymax - ymin);
+		const Point p0 = scaleToPoint(marker_value,n_max_points);
+		//draw line
+		Point p1 = p0 - Point(30, 0);
+		Point p2 = p0 - Point(25, 0);
+		line(im, p1, p2, white);
+		// draw text
+		Point p3 = p0 - Point(20, -5);
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2) << marker_value;
+		putText(im, ss.str(),
+			p3,
+			FONT_HERSHEY_SIMPLEX, text_small, white);
 	}
 
 }

@@ -1,8 +1,9 @@
 #include "ovr.h"
 #include "ps3eye.h"
-#include "camera/camera.h"
-#include "devices/hmd.h"
-#include "devices/hand_controller.h"
+#include "camera.h"
+#include "hmd.h"
+#include "hand_controller.h"
+#include "udp_server.h"
 
 OVR_DLL_EXPORT CameraList_t getCameras()
 {

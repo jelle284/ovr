@@ -20,6 +20,22 @@ private:
 	toggle_button hmd_button, rhc_button, lhc_button;
 	radio_buttons device_select_radio;
 	EDevice active_device;
+	push_button
+		push_btn1,
+		push_btn2,
+		push_btn3,
+		push_btn4,
+
+		push_jmid,
+
+		push_jxmin,
+		push_jxmax,
+
+		push_jymin,
+		push_jymax,
+
+		push_tmin,
+		push_tmax;
 };
 
 #endif SENSORS_H

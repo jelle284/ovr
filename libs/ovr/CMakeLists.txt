@@ -3,6 +3,7 @@
 file(GLOB CAMERA_GLOB src/camera/*.h src/camera/*.cpp)
 file(GLOB DEVICE_GLOB src/devices/*.h src/devices/*.cpp)
 file(GLOB COMMON_GLOB src/common/*.h src/common/*.cpp)
+file(GLOB COMM_GLOB src/communication/*.h src/communication/*.cpp)
 
 add_library(
 	ovr_lib SHARED
@@ -12,6 +13,7 @@ add_library(
 		${CAMERA_GLOB}
 		${DEVICE_GLOB}
 		${COMMON_GLOB}
+		${COMM_GLOB}
 )
 
 target_include_directories(
@@ -19,6 +21,7 @@ target_include_directories(
 		src/camera
 		src/devices
 		src/common
+		src/communication
 		include
 		${LibUSB_INCLUDE_DIRS}
 		${PS3EYE_INCLUDE_DIRS}
