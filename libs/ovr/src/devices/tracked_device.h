@@ -79,6 +79,8 @@ public:
 	TrackerBase(EDevice tag);
 	~TrackerBase();
 	
+	void setConnected(bool status) { m_connectionStatus = status; }
+
 	/* ovr interface */
 	virtual EDevice getTag() override { return m_tag; }
 	virtual bool isConnected() override { return m_connectionStatus; }

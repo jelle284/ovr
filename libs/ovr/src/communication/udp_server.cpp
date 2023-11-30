@@ -118,10 +118,11 @@ void UDPServer::ThreadFunc()
 				map_ctrl[other] = pController;
 				map_addr[pController] = other;
 				pController->parseUDP(read_buf, sizeof(read_buf));
-
 				if (fc == 1) {
 					timestamp_data[pController] = system_clock::now();
 				}
+				auto elapsed_since_last = system_clock::now() - timestamp_data[pController];
+				pController->setConnected(elapsed_since_last < 1s);
 			}
 		}
 		

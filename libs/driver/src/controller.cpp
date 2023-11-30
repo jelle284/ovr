@@ -80,10 +80,10 @@ void COvrControllerDriver::DebugRequest(const char *pchRequest, char *pchRespons
 void COvrControllerDriver::UpdateButtons(ButtonData_t btn)
 {
 	double timeOffset = 0;
-	vr::VRDriverInput()->UpdateBooleanComponent(m_compA, btn.buttons & 1, timeOffset);
-	vr::VRDriverInput()->UpdateBooleanComponent(m_compB, btn.buttons & 2, timeOffset);
-	vr::VRDriverInput()->UpdateBooleanComponent(m_compGrip, btn.buttons & 4, timeOffset);
-	vr::VRDriverInput()->UpdateBooleanComponent(m_compJoystickClick, btn.buttons & 8, timeOffset);
+	vr::VRDriverInput()->UpdateBooleanComponent(m_compA, btn.buttons == 1, timeOffset);
+	vr::VRDriverInput()->UpdateBooleanComponent(m_compB, btn.buttons == 2, timeOffset);
+	vr::VRDriverInput()->UpdateBooleanComponent(m_compGrip, btn.buttons == 3, timeOffset);
+	vr::VRDriverInput()->UpdateBooleanComponent(m_compJoystickClick, btn.buttons == 4, timeOffset);
 	vr::VRDriverInput()->UpdateScalarComponent(m_compJoystickX, btn.joyXY(0), timeOffset);
 	vr::VRDriverInput()->UpdateScalarComponent(m_compJoystickY, btn.joyXY(1), timeOffset);
 	vr::VRDriverInput()->UpdateScalarComponent(m_compTrigger, btn.trigger, timeOffset);

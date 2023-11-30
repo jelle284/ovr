@@ -14,7 +14,7 @@ target_include_directories(driver_ovr PUBLIC
 )
 
 target_link_libraries(driver_ovr PUBLIC
-	${OVR_LIBS}
+	optimized ${OVR_LIBS_RELEASE} debug ${OVR_LIBS_DEBUG}
 	${OpenCV_LIBS}
 )
 	
