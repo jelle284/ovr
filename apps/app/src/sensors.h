@@ -5,6 +5,8 @@
 #include "ovr.h"
 #include "opencv2/opencv.hpp"
 #include "ui/ui_elements.h"
+#include <fstream>
+
 using namespace ui;
 
 class UISensors {
@@ -36,6 +38,10 @@ private:
 
 		push_tmin,
 		push_tmax;
+
+	toggle_button logfile_button;
+	std::ofstream logfile;
+	std::chrono::time_point<std::chrono::system_clock> logfile_t0;
 };
 
 #endif SENSORS_H

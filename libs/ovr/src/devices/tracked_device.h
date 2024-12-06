@@ -51,27 +51,11 @@
 #define REG_SSID    0x30
 #define REG_PASS    0x38
 
+class Camera;
+
 /* Base class for tracked devices */
 class TrackerBase : public IDevice
 {
-private:
-	IMUData_t m_IMUData;
-	Pose_t m_Pose;
-	Quaternionf m_qzero, m_q;
-	cv::Matx31f m_accRef, m_magRef;
-	KalmanFilter3 m_kf;
-	void fuse_imu();
-protected:
-	// device states
-	std::mutex m_mtx;
-	EDevice m_tag;
-	bool m_connectionStatus;
-	bool m_running;
-	int m_pollRate;
-	// functions
-	void imu_update(float* read_buf);
-	virtual void udef_write(cv::FileStorage& fs) const {};
-	virtual void udef_read(const cv::FileNode& node) {};
 public:
 	// led parameters
 	unsigned char led_R, led_G, led_B, led_tmr;
@@ -80,7 +64,7 @@ public:
 	~TrackerBase();
 	
 	void setConnected(bool status) { m_connectionStatus = status; }
-
+	void camera_update(Camera* cam);
 	/* ovr interface */
 	virtual EDevice getTag() override { return m_tag; }
 	virtual bool isConnected() override { return m_connectionStatus; }
@@ -97,6 +81,25 @@ public:
 	virtual void align() override;
 	virtual void write(cv::FileStorage& fs) const override;
 	virtual void read(const cv::FileNode& node) override;
+protected:
+	// device states
+	std::mutex m_mtx;
+	EDevice m_tag;
+	bool m_connectionStatus;
+	bool m_running;
+	int m_pollRate;
+	// functions
+	void imu_update(float* read_buf);
+	virtual void udef_write(cv::FileStorage& fs) const {};
+	virtual void udef_read(const cv::FileNode& node) {};
+private:
+	std::chrono::system_clock::time_point m_t0;
+	IMUData_t m_IMUData;
+	Pose_t m_Pose;
+	Quaternionf m_qzero, m_q;
+	cv::Matx31f m_accRef, m_magRef;
+	KalmanFilter3 m_kf;
+	void fuse_imu();
 };
 
 #endif

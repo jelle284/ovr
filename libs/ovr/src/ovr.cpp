@@ -5,19 +5,23 @@
 #include "hand_controller.h"
 #include "udp_server.h"
 
+HeadMountDisplay g_Hmd;
+HandController g_RHC(EDevice::RightHandController), g_LHC(EDevice::LeftHandController);
+UDPServer g_udp;
+
 OVR_DLL_EXPORT CameraList_t getCameras()
 {
 	std::vector<ICamera*> v;
 	auto devices = ps3eye::PS3EYECam::getDevices();
 	for (auto d : devices) {
-		v.push_back(new Camera(d));
+		Camera* pCamera = new Camera(d);
+		pCamera->registerDevice((TrackerBase*)&g_Hmd);
+		pCamera->registerDevice((TrackerBase*)&g_RHC);
+		pCamera->registerDevice((TrackerBase*)&g_LHC);
+		v.push_back(pCamera);
 	}
 	return v;
 }
-
-HeadMountDisplay g_Hmd;
-HandController g_RHC(EDevice::RightHandController), g_LHC(EDevice::LeftHandController);
-UDPServer g_udp;
 
 OVR_DLL_EXPORT DeviceList_t getDevices()
 {

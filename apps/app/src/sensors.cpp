@@ -37,7 +37,8 @@ UISensors::UISensors() :
 	push_jymax(860, 500, 160, 30, "Jy Max"),
 
 	push_tmin(860, 540, 160, 30, "Trig Min"),
-	push_tmax(860, 580, 160, 30, "Trig Max")
+	push_tmax(860, 580, 160, 30, "Trig Max"),
+	logfile_button(880, 30, 140, 30, "Log to file")
 {
 	for (int i = 0; i < 3; ++i) ui_elements.push_back(&graph_imu[i]);
 	ui_elements.push_back(&graph_analogs);
@@ -60,13 +61,13 @@ UISensors::UISensors() :
 
 	ui_elements.push_back(&push_tmin);
 	ui_elements.push_back(&push_tmax);
-
+	
+	ui_elements.push_back(&logfile_button);
 
 	// init radio buttons
 	device_select_radio.add(&hmd_button);
 	device_select_radio.add(&rhc_button);
 	device_select_radio.add(&lhc_button);
-
 }
 
 UISensors::~UISensors()
@@ -84,18 +85,17 @@ void UISensors::loop(cv::Mat& canvas, mouse_data_t mouse)
 	// clear canvas
 	rectangle(canvas, Rect(0, 0, 1280, 800), Scalar(240, 180, 120), -1);
 	// read imu
-	if (dev->has_data & EDataFlags::IMU) {
-		IMUData_t imu_data = dev->get_imu_data();
-		graph_imu[0].add(imu_data.gyro(0), 0);
-		graph_imu[0].add(imu_data.gyro(1), 1);
-		graph_imu[0].add(imu_data.gyro(2), 2);
-		graph_imu[1].add(imu_data.accel(0), 0);
-		graph_imu[1].add(imu_data.accel(1), 1);
-		graph_imu[1].add(imu_data.accel(2), 2);
-		graph_imu[2].add(imu_data.mag(0), 0);
-		graph_imu[2].add(imu_data.mag(1), 1);
-		graph_imu[2].add(imu_data.mag(2), 2);
-	}
+	IMUData_t imu_data = dev->get_imu_data();
+	graph_imu[0].add(imu_data.gyro(0), 0);
+	graph_imu[0].add(imu_data.gyro(1), 1);
+	graph_imu[0].add(imu_data.gyro(2), 2);
+	graph_imu[1].add(imu_data.accel(0), 0);
+	graph_imu[1].add(imu_data.accel(1), 1);
+	graph_imu[1].add(imu_data.accel(2), 2);
+	graph_imu[2].add(imu_data.mag(0), 0);
+	graph_imu[2].add(imu_data.mag(1), 1);
+	graph_imu[2].add(imu_data.mag(2), 2);
+
 	// read buttons (if controller)
 	if (dev->has_data & EDataFlags::Button) {
 		ButtonData_t btn = dev->get_button_data();
@@ -164,6 +164,31 @@ void UISensors::loop(cv::Mat& canvas, mouse_data_t mouse)
 		if (lhc_button.get_state()) {
 			active_device = EDevice::LeftHandController;
 		}
+	}
+
+	// log file button
+	if (logfile_button.has_changed) {
+		if (logfile_button.get_state()) {
+			logfile.open("sensorlog.csv");
+			logfile << "t,ax,ay,az,gx,gy,gz,mx,my,mz\n";
+			logfile_t0 = std::chrono::system_clock::now();
+		}
+		else {
+			logfile.close();
+		}
+	}
+	if (logfile_button.get_state()) {
+		std::chrono::duration<double> elapsed = std::chrono::system_clock::now() - logfile_t0;
+		logfile << elapsed.count() << ","
+			<< imu_data.accel(0) << ","
+			<< imu_data.accel(1) << ","
+			<< imu_data.accel(2) << ","
+			<< imu_data.gyro(0) << ","
+			<< imu_data.gyro(1) << ","
+			<< imu_data.gyro(2) << ","
+			<< imu_data.mag(0) << ","
+			<< imu_data.mag(1) << ","
+			<< imu_data.mag(2) << "\n";
 	}
 }
 

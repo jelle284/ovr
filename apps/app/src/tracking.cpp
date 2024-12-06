@@ -132,39 +132,38 @@ void UITracking::loop(cv::Mat& canvas, mouse_data_t mouse)
 	for (int i = 0; i < 3; ++i) {
 		// check if button is toggled
 		if (!device_button[i].get_state()) continue;
-		// update device
-		IDevice* pDevice = g_Devices[i];
-		// update position from cameras
-		if (pDevice->has_data & EDataFlags::IMU) {
-			pDevice->update_from_ext(g_Cameras);
-		}
-		// get pose from device
-		if (pDevice->has_data & EDataFlags::Pose) {
-			auto pose = pDevice->get_pose_data();
-			// draw position
-			pos_view[i].center(0) = pose.pos(0);
-			pos_view[i].center(1) = pose.pos(1);
-			pos_view[i].center(2) = pose.pos(2);
-				
-			// draw device
-			Quaternionf d(0.0, 0.0, 0.0, -0.2);
-			Quaternionf dn = pose.q * d * pose.q.conjugate();
-			dev_view[i].origin = pos_view[i].center;
-			dev_view[i].direction = cv::Matx31d(dn.val[1], dn.val[2], dn.val[3]);
 
-			{	// print quaternion
-				std::stringstream ss;
-				ss.precision(2);
-				ss << std::fixed << "quat: " << pose.q.val[0] << ", " << pose.q.val[1] << ", " << pose.q.val[2] << ", " << pose.q.val[3];
-				quat_label[i].text = ss.str();
-			}
-			{	// print position
-				std::stringstream ss;
-				ss.precision(2);
-				ss << std::fixed << "pos: " << pose.pos(0) << ", " << pose.pos(1) << ", " << pose.pos(2);
-				pos_label[i].text = ss.str();
-			}
+		// get pose from device
+		IDevice* pDevice = g_Devices[i];
+
+		pDevice->update_from_ext(g_Cameras);
+
+		auto pose = pDevice->get_pose_data();
+
+		// draw position
+		pos_view[i].center(0) = pose.pos(0);
+		pos_view[i].center(1) = pose.pos(1);
+		pos_view[i].center(2) = pose.pos(2);
+				
+		// draw rotation
+		Quaternionf d(0.0, 0.0, 0.0, -0.2);
+		Quaternionf dn = pose.q * d * pose.q.conjugate();
+		dev_view[i].origin = pos_view[i].center;
+		dev_view[i].direction = dn.imag();
+
+		{	// print quaternion
+			std::stringstream ss;
+			ss.precision(2);
+			ss << std::fixed << "quat: " << pose.q.val[0] << ", " << pose.q.val[1] << ", " << pose.q.val[2] << ", " << pose.q.val[3];
+			quat_label[i].text = ss.str();
 		}
+		{	// print position
+			std::stringstream ss;
+			ss.precision(2);
+			ss << std::fixed << "pos: " << pose.pos(0) << ", " << pose.pos(1) << ", " << pose.pos(2);
+			pos_label[i].text = ss.str();
+		}
+		// draw components onto canvas
 		quat_label[i].draw(canvas);
 		pos_label[i].draw(canvas);
 		pos_view[i].project(canvas(ls), viewer);

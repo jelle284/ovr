@@ -1,6 +1,6 @@
 #include "server_driver.h"
 
-#define ROT_ONLY
+
 
 EVRInitError COvrServerDriver::Init( vr::IVRDriverContext *pDriverContext )
 {

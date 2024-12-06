@@ -7,25 +7,13 @@
 #include "ovr.h"
 #include "object_tracker.h"
 
+class TrackerBase;
+
 class Camera : public ICamera {
-private:
-	const unsigned int width, height;
-	cv::Mat m_imBuffer;
-	std::thread* m_pThread;
-	bool m_threadState;
-	ps3eye::PS3EYECam::PS3EYERef m_pEye;
-	
-	uchar m_gain, m_exposure;
-	bool m_autogain, is_calibrated;
-	Calibration_t m_calib, m_invcalib;
-	std::array<ObjectTracker, 3> trackers;
-
-	void threadFunc();
-
-	bool has_inv, has_int, has_ext;
 public:
 	Camera(ps3eye::PS3EYECam::PS3EYERef pEye);
 	~Camera();
+	void registerDevice(TrackerBase* pDevice);
 
 	// interface implemention
 	virtual void start(ECameraRunMode mode) override;
@@ -63,6 +51,23 @@ public:
 	void write(cv::FileStorage& fs) const override;
 	void read(const cv::FileNode& node) override;
 	virtual std::string file_id() override;
+
+private:
+	std::array<TrackerBase*, 3> devices;
+	const unsigned int width, height;
+	cv::Mat m_imBuffer;
+	std::thread* m_pThread;
+	bool m_threadState;
+	ps3eye::PS3EYECam::PS3EYERef m_pEye;
+
+	uchar m_gain, m_exposure;
+	bool m_autogain, is_calibrated;
+	Calibration_t m_calib, m_invcalib;
+	std::array<ObjectTracker, 3> trackers;
+
+	void threadFunc();
+
+	bool has_inv, has_int, has_ext;
 }; 
 
 void debayerPSEye(cv::Mat& bayer, cv::Mat& bgr);

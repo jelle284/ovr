@@ -1,9 +1,11 @@
 #include "camera.h"
 #include "camera_math.h"
+#include "tracked_device.h"
 
 /************** Camera ****************/
 
 Camera::Camera(ps3eye::PS3EYECam::PS3EYERef pEye) :
+	devices{nullptr},
 	width(640), height(480),
 	m_pEye(pEye),
 	m_autogain(false), is_calibrated(false),
@@ -21,17 +23,23 @@ Camera::~Camera()
 	if (m_pEye->isStreaming()) m_pEye->stop();
 }
 
+void Camera::registerDevice(TrackerBase* pDevice)
+{
+	const int devidx = static_cast<int>(pDevice->getTag());
+	devices[devidx] = pDevice;
+}
+
 void Camera::threadFunc()
 {
 	cv::Mat im;
 	m_threadState = true;
 	while (m_threadState) {
 		view(im);
-		for (auto & t : trackers) {
-			if (t.status) t.update(im);
+		for (int i = 0; i < 3; ++i) {
+			if (trackers[i].status) trackers[i].update(im);
+			if (trackers[i].found && devices[i]) devices[i]->camera_update(this);
 		}
 	}
-	
 }
 
 void Camera::start(ECameraRunMode mode)
@@ -78,7 +86,7 @@ void Camera::man_tracker_update(EDevice dev, const cv::Mat& image)
 bool Camera::get_tracker_ray(EDevice dev, cv::Matx31d& ray)
 {
 	ObjectTracker& t = trackers[static_cast<int>(dev)];
-	if (t.found & t.status) {
+	if (t.found && t.status) {
 		ray = castRay(
 			m_invcalib.rv,
 			m_invcalib.cm,

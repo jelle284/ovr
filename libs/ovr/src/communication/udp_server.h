@@ -1,5 +1,6 @@
 #ifndef UDPSERVER_H
 #define UDPSERVER_H
+#include "hand_controller.h"
 
 class UDPServer {
 	std::vector<HandController*> m_subscribers;

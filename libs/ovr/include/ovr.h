@@ -180,3 +180,25 @@ typedef std::array<IDevice*, 3> DeviceList_t;
 OVR_DLL_EXPORT DeviceList_t getDevices();
 
 #endif
+
+/*
+remove start/stop from devices and cameras, replace with overall driver start/stop which manages all threads and registration
+
+device interface
+- register pose submit callback
+
+device implementation
+- callback: on connect				we have this in handcontroller::assign_chip
+- callback: data recieved			we have this in tracker base for IMU and handcontroller for Buttons
+- callback: spotted by camera		we have this in update from ext
+
+camera implementation
+- register device					TODO
+
+udp server
+- register device					this exists as subscribe
+
+serial port handler
+- register device					maybe not needed
+
+*/

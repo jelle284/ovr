@@ -4,7 +4,7 @@
 #include "mouse_handler.h"
 
 #define IN_RECT(xp, yp, rect) (xp > rect.x && xp < (rect.x + rect.width) && yp > rect.y && yp < (rect.y + rect.height))
-#define WIN_CLOSED(winname) (cv::getWindowProperty(winname, cv::WND_PROP_AUTOSIZE) == -1)
+#define WIN_CLOSED(winname) (cv::getWindowProperty(winname, cv::WND_PROP_VISIBLE) < 1)
 
 
 

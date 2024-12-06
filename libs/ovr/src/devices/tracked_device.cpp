@@ -1,7 +1,15 @@
 #include "tracked_device.h"
-#include "mahony.h"
-#include "madgwick.h"
 #include "camera_math.h"
+#include "camera.h"
+
+double timer_tick(std::chrono::system_clock::time_point& t0, const double upper_lim = 1.0) {
+	std::chrono::system_clock::time_point t1 = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed = t1 - t0;
+	t0 = t1;
+	if (elapsed.count() > upper_lim) return upper_lim;
+	if (elapsed.count() <= 0.0) return 0.001;
+	return elapsed.count();
+}
 
 TrackerBase::TrackerBase(EDevice tag) :
     m_tag(tag),
@@ -14,6 +22,7 @@ TrackerBase::TrackerBase(EDevice tag) :
 	
 	m_kf.makeAB(0.001 * m_pollRate);
 	m_kf.setNoise(0.6, 0.4);
+	m_t0 = std::chrono::system_clock::now();
 }
 
 
@@ -23,6 +32,10 @@ TrackerBase::~TrackerBase()
 		m_running = false;
 	}
 	m_connectionStatus = false;
+}
+
+void TrackerBase::camera_update(Camera* cam)
+{
 }
 
 void TrackerBase::imu_update(float* read_buf)
@@ -39,17 +52,36 @@ void TrackerBase::imu_update(float* read_buf)
 
 void TrackerBase::fuse_imu()
 {
-	// imu fusion
-	auto dq = mahonyQuaternionUpdate(m_IMUData, m_q);
-	m_q = m_q + dq.mul(m_pollRate * 0.001f);
+	using namespace cv;
+	// get timing
+	double elapsed = timer_tick(m_t0);
+	const float Kp = 1.0f;
+	// prep quaternion
+	if (isnan(m_q.val[0])) m_q = Quaternionf(1.0f, 0.0f, 0.0f, 0.0f);
+	Matx33f rm = m_q.toRotationMatrix(); // converts sensor frame to world frame
+	// accelerometer correction
+	Matx31f a_norm = m_IMUData.accel / norm(m_IMUData.accel);
+	Matx31f a_ref = rm.t() * Matx31f(0.0f,1.0f,0.0f);
+	Matx31f a_corr = Kp * cross(a_norm, a_ref);
+	Quaternionf qa(a_corr);
+
+	// magnetometer correction
+	Matx31f m_norm = m_IMUData.mag / norm(m_IMUData.mag);
+	Matx31f m_world = rm * m_norm;
+	Matx21f compass(m_world(0), m_world(2));
+	float incline = m_world(1);
+	Matx31f m_ref = rm.t() * Matx31f(0.0f, incline, -norm(compass));
+	Matx31f m_corr = Kp * cross(m_norm, m_ref);
+	Quaternionf qm(m_corr);
+
+	// quaternion integration
+	Quaternionf qw(m_IMUData.gyro);
+	Quaternionf dq = 0.5f * m_q * (qw+qa+qm);
+	m_q = m_q + dq * elapsed;
 	m_q = m_q.normalized();
 	// offset
 	m_Pose.q = m_qzero.conjugate() * m_q;
-	// update acceleration
-	Quaternionf qacc = m_q * Quaternionf(0.0, m_IMUData.accel(0), m_IMUData.accel(1), m_IMUData.accel(2)) * m_q.conjugate();
-	cv::Matx31d acc(qacc.val[1], qacc.val[2] - 9.81, qacc.val[3]);
-	m_kf.setAcc(acc);
-	m_kf.predict();
+
 	// set flag
 	has_data |= EDataFlags::IMU;
 }
@@ -83,6 +115,7 @@ void TrackerBase::update_from_ext(std::vector<ICamera*> cameras)
 		}
 	}
 	auto next_pos = m_kf.get_pos() + step;
+	m_kf.predict();
 	m_kf.correct(next_pos);
 
 	has_data |= EDataFlags::Pose;

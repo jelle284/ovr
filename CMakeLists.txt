@@ -102,7 +102,7 @@ target_link_libraries(sandbox PUBLIC
 )
 
 set_target_properties(
-	ovr_app
+	sandbox
 	PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE ${STEAM_PATH}/config/ovr
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/debug

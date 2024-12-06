@@ -3,9 +3,6 @@
 #include "ovr.h"
 
 
-
-
-
 // main
 int main(int argc, char* argv[]) {
 	// HELLO SANDBOX
@@ -20,7 +17,8 @@ int main(int argc, char* argv[]) {
 	ui::static_text 
 		st(50, 50, 200, 50),
 		rgyro(50, 150, 200, 600),
-		lgyro(300, 150, 200, 600);
+		lgyro(300, 150, 200, 600),
+		devstatus(600, 300, 400, 300);
 
 	st.text = "Hello";
 	st.fontScale = 1.0;
@@ -31,6 +29,9 @@ int main(int argc, char* argv[]) {
 
 	lgyro.text = "gyro placeholder";
 	window.elements.push_back(&lgyro);
+
+	devstatus.text = "device status";
+	window.elements.push_back(&devstatus);
 
 	ui::toggle_button tb(700, 50, 200, 50, "toggle");
 	window.elements.push_back(&tb);
@@ -53,8 +54,14 @@ int main(int argc, char* argv[]) {
 			std::cout << "Hi from gui" << std::endl;
 		}
 
+		
+
 		// write out data from devices
+		std::stringstream status_ss;
 		for (auto d : devices) {
+			
+			status_ss << d->get_name() << " is " << (d->isConnected() ? "" : "not") << " connected.\n";
+			
 			if (d->has_data & EDataFlags::IMU) {
 				auto imu_data = d->get_imu_data();
 				auto pose_data = d->get_pose_data();
@@ -85,6 +92,7 @@ int main(int argc, char* argv[]) {
 				}
 			}
 		}
+		devstatus.text = status_ss.str();
 	}
 	// End GUI
 	std::cout << "Goodnight Sandbox" << std::endl;
